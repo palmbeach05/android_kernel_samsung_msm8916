@@ -30,6 +30,33 @@
 #define VERDE_GB_ADDR_CONFIG_GOLDEN         0x12010002
 #define HAINAN_GB_ADDR_CONFIG_GOLDEN        0x02010001
 
+#define SI_MAX_SH_GPRS           256
+#define SI_MAX_TEMP_GPRS         16
+#define SI_MAX_SH_THREADS        256
+#define SI_MAX_SH_STACK_ENTRIES  4096
+#define SI_MAX_FRC_EOV_CNT       16384
+#define SI_MAX_BACKENDS          8
+#define SI_MAX_BACKENDS_MASK     0xFF
+#define SI_MAX_BACKENDS_PER_SE_MASK     0x0F
+#define SI_MAX_SIMDS             12
+#define SI_MAX_SIMDS_MASK        0x0FFF
+#define SI_MAX_SIMDS_PER_SE_MASK        0x00FF
+#define SI_MAX_PIPES             8
+#define SI_MAX_PIPES_MASK        0xFF
+#define SI_MAX_PIPES_PER_SIMD_MASK      0x3F
+#define SI_MAX_LDS_NUM           0xFFFF
+#define SI_MAX_TCC               16
+#define SI_MAX_TCC_MASK          0xFFFF
+
+#define VGA_HDP_CONTROL  				0x328
+#define		VGA_MEMORY_DISABLE				(1 << 4)
+
+
+#define CG_CLKPIN_CNTL                                    0x660
+#       define XTALIN_DIVIDE                              (1 << 1)
+#define CG_CLKPIN_CNTL_2                                  0x664
+#       define MUX_TCLK_TO_XCLK                           (1 << 8)
+
 /* discrete uvd clocks */
 #define	CG_UPLL_FUNC_CNTL				0x634
 #	define UPLL_RESET_MASK				0x00000001
@@ -67,31 +94,89 @@
 #define		CTF_TEMP_MASK					0x0003fe00
 #define		CTF_TEMP_SHIFT					9
 
-#define SI_MAX_SH_GPRS           256
-#define SI_MAX_TEMP_GPRS         16
-#define SI_MAX_SH_THREADS        256
-#define SI_MAX_SH_STACK_ENTRIES  4096
-#define SI_MAX_FRC_EOV_CNT       16384
-#define SI_MAX_BACKENDS          8
-#define SI_MAX_BACKENDS_MASK     0xFF
-#define SI_MAX_BACKENDS_PER_SE_MASK     0x0F
-#define SI_MAX_SIMDS             12
-#define SI_MAX_SIMDS_MASK        0x0FFF
-#define SI_MAX_SIMDS_PER_SE_MASK        0x00FF
-#define SI_MAX_PIPES             8
-#define SI_MAX_PIPES_MASK        0xFF
-#define SI_MAX_PIPES_PER_SIMD_MASK      0x3F
-#define SI_MAX_LDS_NUM           0xFFFF
-#define SI_MAX_TCC               16
-#define SI_MAX_TCC_MASK          0xFFFF
+#define GENERAL_PWRMGT                                  0x780
+#       define GLOBAL_PWRMGT_EN                         (1 << 0)
+#       define STATIC_PM_EN                             (1 << 1)
+#       define THERMAL_PROTECTION_DIS                   (1 << 2)
+#       define THERMAL_PROTECTION_TYPE                  (1 << 3)
+#       define SW_SMIO_INDEX(x)                         ((x) << 6)
+#       define SW_SMIO_INDEX_MASK                       (1 << 6)
+#       define SW_SMIO_INDEX_SHIFT                      6
+#       define VOLT_PWRMGT_EN                           (1 << 10)
+#       define DYN_SPREAD_SPECTRUM_EN                   (1 << 23)
+#define CG_TPC                                            0x784
+#define SCLK_PWRMGT_CNTL                                  0x788
+#       define SCLK_PWRMGT_OFF                            (1 << 0)
+#       define SCLK_LOW_D1                                (1 << 1)
+#       define FIR_RESET                                  (1 << 4)
+#       define FIR_FORCE_TREND_SEL                        (1 << 5)
+#       define FIR_TREND_MODE                             (1 << 6)
+#       define DYN_GFX_CLK_OFF_EN                         (1 << 7)
+#       define GFX_CLK_FORCE_ON                           (1 << 8)
+#       define GFX_CLK_REQUEST_OFF                        (1 << 9)
+#       define GFX_CLK_FORCE_OFF                          (1 << 10)
+#       define GFX_CLK_OFF_ACPI_D1                        (1 << 11)
+#       define GFX_CLK_OFF_ACPI_D2                        (1 << 12)
+#       define GFX_CLK_OFF_ACPI_D3                        (1 << 13)
+#       define DYN_LIGHT_SLEEP_EN                         (1 << 14)
 
-#define VGA_HDP_CONTROL  				0x328
-#define		VGA_MEMORY_DISABLE				(1 << 4)
+#define TARGET_AND_CURRENT_PROFILE_INDEX                  0x798
+#       define CURRENT_STATE_INDEX_MASK                   (0xf << 4)
+#       define CURRENT_STATE_INDEX_SHIFT                  4
 
-#define CG_CLKPIN_CNTL                                    0x660
-#       define XTALIN_DIVIDE                              (1 << 1)
-#define CG_CLKPIN_CNTL_2                                  0x664
-#       define MUX_TCLK_TO_XCLK                           (1 << 8)
+#define CG_FTV                                            0x7bc
+
+#define CG_FFCT_0                                         0x7c0
+#       define UTC_0(x)                                   ((x) << 0)
+#       define UTC_0_MASK                                 (0x3ff << 0)
+#       define DTC_0(x)                                   ((x) << 10)
+#       define DTC_0_MASK                                 (0x3ff << 10)
+
+#define CG_BSP                                          0x7fc
+#       define BSP(x)					((x) << 0)
+#       define BSP_MASK					(0xffff << 0)
+#       define BSU(x)					((x) << 16)
+#       define BSU_MASK					(0xf << 16)
+#define CG_AT                                           0x800
+#       define CG_R(x)					((x) << 0)
+#       define CG_R_MASK				(0xffff << 0)
+#       define CG_L(x)					((x) << 16)
+#       define CG_L_MASK				(0xffff << 16)
+
+#define CG_GIT                                          0x804
+#       define CG_GICST(x)                              ((x) << 0)
+#       define CG_GICST_MASK                            (0xffff << 0)
+#       define CG_GIPOT(x)                              ((x) << 16)
+#       define CG_GIPOT_MASK                            (0xffff << 16)
+
+#define CG_SSP                                            0x80c
+#       define SST(x)                                     ((x) << 0)
+#       define SST_MASK                                   (0xffff << 0)
+#       define SSTU(x)                                    ((x) << 16)
+#       define SSTU_MASK                                  (0xf << 16)
+
+#define CG_DISPLAY_GAP_CNTL                               0x828
+#       define DISP1_GAP(x)                               ((x) << 0)
+#       define DISP1_GAP_MASK                             (3 << 0)
+#       define DISP2_GAP(x)                               ((x) << 2)
+#       define DISP2_GAP_MASK                             (3 << 2)
+#       define VBI_TIMER_COUNT(x)                         ((x) << 4)
+#       define VBI_TIMER_COUNT_MASK                       (0x3fff << 4)
+#       define VBI_TIMER_UNIT(x)                          ((x) << 20)
+#       define VBI_TIMER_UNIT_MASK                        (7 << 20)
+#       define DISP1_GAP_MCHG(x)                          ((x) << 24)
+#       define DISP1_GAP_MCHG_MASK                        (3 << 24)
+#       define DISP2_GAP_MCHG(x)                          ((x) << 26)
+#       define DISP2_GAP_MCHG_MASK                        (3 << 26)
+
+#define	CG_ULV_CONTROL					0x878
+#define	CG_ULV_PARAMETER				0x87c
+
+#define	SMC_SCRATCH0					0x884
+
+#define	CG_CAC_CTRL					0x8b8
+#	define CAC_WINDOW(x)				((x) << 0)
+#	define CAC_WINDOW_MASK				0x00ffffff
 
 #define DMIF_ADDR_CONFIG  				0xBD4
 
