@@ -1755,8 +1755,14 @@ static int srp_abort(struct scsi_cmnd *scmnd)
 
 	if (!req || !srp_claim_req(target, req, scmnd))
 		return FAILED;
-	srp_send_tsk_mgmt(target, req->index, scmnd->device->lun,
-			  SRP_TSK_ABORT_TASK);
+	if (srp_send_tsk_mgmt(target, req->index, scmnd->device->lun,
+			      SRP_TSK_ABORT_TASK) == 0 ||
+	    target->transport_offline)
+		ret = SUCCESS;
+	else if (target->transport_offline)
+		ret = FAST_IO_FAIL;
+	else
+		ret = FAILED;
 	srp_free_req(target, req, scmnd, 0);
 	scmnd->result = DID_ABORT << 16;
 	scmnd->scsi_done(scmnd);
