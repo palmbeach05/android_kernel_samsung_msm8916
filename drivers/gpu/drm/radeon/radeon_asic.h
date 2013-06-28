@@ -395,6 +395,35 @@ void r600_kms_blit_copy(struct radeon_device *rdev,
 int r600_mc_wait_for_idle(struct radeon_device *rdev);
 u32 r600_get_xclk(struct radeon_device *rdev);
 uint64_t r600_get_gpu_clock_counter(struct radeon_device *rdev);
+int rv6xx_get_temp(struct radeon_device *rdev);
+int r600_dpm_pre_set_power_state(struct radeon_device *rdev);
+void r600_dpm_post_set_power_state(struct radeon_device *rdev);
+/* rv6xx dpm */
+int rv6xx_dpm_init(struct radeon_device *rdev);
+int rv6xx_dpm_enable(struct radeon_device *rdev);
+void rv6xx_dpm_disable(struct radeon_device *rdev);
+int rv6xx_dpm_set_power_state(struct radeon_device *rdev);
+void rv6xx_setup_asic(struct radeon_device *rdev);
+void rv6xx_dpm_display_configuration_changed(struct radeon_device *rdev);
+void rv6xx_dpm_fini(struct radeon_device *rdev);
+u32 rv6xx_dpm_get_sclk(struct radeon_device *rdev, bool low);
+u32 rv6xx_dpm_get_mclk(struct radeon_device *rdev, bool low);
+void rv6xx_dpm_print_power_state(struct radeon_device *rdev,
+				 struct radeon_ps *ps);
+void rv6xx_dpm_debugfs_print_current_performance_level(struct radeon_device *rdev,
+						       struct seq_file *m);
+/* rs780 dpm */
+int rs780_dpm_init(struct radeon_device *rdev);
+int rs780_dpm_enable(struct radeon_device *rdev);
+void rs780_dpm_disable(struct radeon_device *rdev);
+int rs780_dpm_set_power_state(struct radeon_device *rdev);
+void rs780_dpm_setup_asic(struct radeon_device *rdev);
+void rs780_dpm_display_configuration_changed(struct radeon_device *rdev);
+void rs780_dpm_fini(struct radeon_device *rdev);
+u32 rs780_dpm_get_sclk(struct radeon_device *rdev, bool low);
+u32 rs780_dpm_get_mclk(struct radeon_device *rdev, bool low);
+void rs780_dpm_print_power_state(struct radeon_device *rdev,
+				 struct radeon_ps *ps);
 
 /* uvd */
 int r600_uvd_init(struct radeon_device *rdev);
