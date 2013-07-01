@@ -1188,8 +1188,6 @@ static int ext4_write_end(struct file *file,
 	if (i_size_changed)
 		ext4_mark_inode_dirty(handle, inode);
 
-	if (copied < 0)
-		ret = copied;
 	if (pos + len > inode->i_size && ext4_can_truncate(inode))
 		/* if we have allocated more blocks and copied
 		 * less. We will have blocks allocated outside
@@ -3627,6 +3625,141 @@ int ext4_can_truncate(struct inode *inode)
 	if (S_ISLNK(inode->i_mode))
 		return !ext4_inode_is_fast_symlink(inode);
 	return 0;
+}
+
+/*
+ * ext4_block_zero_page_range() zeros out a mapping of length 'length'
+ * starting from file offset 'from'.  The range to be zero'd must
+ * be contained with in one block.  If the specified range exceeds
+ * the end of the block it will be shortened to end of the block
+ * that cooresponds to 'from'
+ */
+static int ext4_block_zero_page_range(handle_t *handle,
+		struct address_space *mapping, loff_t from, loff_t length)
+{
+	ext4_fsblk_t index = from >> PAGE_CACHE_SHIFT;
+	unsigned offset = from & (PAGE_CACHE_SIZE-1);
+	unsigned blocksize, max, pos;
+	ext4_lblk_t iblock;
+	struct inode *inode = mapping->host;
+	struct buffer_head *bh;
+	struct page *page;
+	int err = 0;
+
+	page = find_or_create_page(mapping, from >> PAGE_CACHE_SHIFT,
+				   mapping_gfp_mask(mapping) & ~__GFP_FS);
+	if (!page)
+		return -ENOMEM;
+
+	blocksize = inode->i_sb->s_blocksize;
+	max = blocksize - (offset & (blocksize - 1));
+
+	/*
+	 * correct length if it does not fall between
+	 * 'from' and the end of the block
+	 */
+	if (length > max || length < 0)
+		length = max;
+
+	iblock = index << (PAGE_CACHE_SHIFT - inode->i_sb->s_blocksize_bits);
+
+	if (!page_has_buffers(page))
+		create_empty_buffers(page, blocksize, 0);
+
+	/* Find the buffer that contains "offset" */
+	bh = page_buffers(page);
+	pos = blocksize;
+	while (offset >= pos) {
+		bh = bh->b_this_page;
+		iblock++;
+		pos += blocksize;
+	}
+	if (buffer_freed(bh)) {
+		BUFFER_TRACE(bh, "freed: skip");
+		goto unlock;
+	}
+	if (!buffer_mapped(bh)) {
+		BUFFER_TRACE(bh, "unmapped");
+		ext4_get_block(inode, iblock, bh, 0);
+		/* unmapped? It's a hole - nothing to do */
+		if (!buffer_mapped(bh)) {
+			BUFFER_TRACE(bh, "still unmapped");
+			goto unlock;
+		}
+	}
+
+	/* Ok, it's mapped. Make sure it's up-to-date */
+	if (PageUptodate(page))
+		set_buffer_uptodate(bh);
+
+	if (!buffer_uptodate(bh)) {
+		err = -EIO;
+		ll_rw_block(READ, 1, &bh);
+		wait_on_buffer(bh);
+		/* Uhhuh. Read error. Complain and punt. */
+		if (!buffer_uptodate(bh))
+			goto unlock;
+	}
+	if (ext4_should_journal_data(inode)) {
+		BUFFER_TRACE(bh, "get write access");
+		err = ext4_journal_get_write_access(handle, bh);
+		if (err)
+			goto unlock;
+	}
+	zero_user(page, offset, length);
+	BUFFER_TRACE(bh, "zeroed end of block");
+
+	if (ext4_should_journal_data(inode)) {
+		err = ext4_handle_dirty_metadata(handle, inode, bh);
+	} else {
+		err = 0;
+		mark_buffer_dirty(bh);
+		if (ext4_test_inode_state(inode, EXT4_STATE_ORDERED_MODE))
+			err = ext4_jbd2_file_inode(handle, inode);
+	}
+
+unlock:
+	unlock_page(page);
+	page_cache_release(page);
+	return err;
+}
+
+int ext4_zero_partial_blocks(handle_t *handle, struct inode *inode,
+			     loff_t lstart, loff_t length)
+{
+	struct super_block *sb = inode->i_sb;
+	struct address_space *mapping = inode->i_mapping;
+	unsigned partial_start, partial_end;
+	ext4_fsblk_t start, end;
+	loff_t byte_end = (lstart + length - 1);
+	int err = 0;
+
+	partial_start = lstart & (sb->s_blocksize - 1);
+	partial_end = byte_end & (sb->s_blocksize - 1);
+
+	start = lstart >> sb->s_blocksize_bits;
+	end = byte_end >> sb->s_blocksize_bits;
+
+	/* Handle partial zero within the single block */
+	if (start == end &&
+	    (partial_start || (partial_end != sb->s_blocksize - 1))) {
+		err = ext4_block_zero_page_range(handle, mapping,
+						 lstart, length);
+		return err;
+	}
+	/* Handle partial zero out on the start of the range */
+	if (partial_start) {
+		err = ext4_block_zero_page_range(handle, mapping,
+						 lstart, sb->s_blocksize);
+		if (err)
+			return err;
+	}
+	/* Handle partial zero out on the end of the range */
+	if (partial_end != sb->s_blocksize - 1)
+		err = ext4_block_zero_page_range(handle, mapping,
+						 byte_end - partial_end,
+						 partial_end + 1);
+	return err;
 }
 
 /*
