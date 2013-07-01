@@ -106,4 +106,10 @@ static inline void __tlb_remove_pmd_tlb_entry(struct mmu_gather *tlb, pmd_t *pmd
 	tlb_add_flush(tlb, address);
 }
 
+static inline void
+tlb_remove_pmd_tlb_entry(struct mmu_gather *tlb, pmd_t *pmdp, unsigned long addr)
+{
+	tlb_add_flush(tlb, addr);
+}
+
 #endif
