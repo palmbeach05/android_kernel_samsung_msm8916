@@ -1033,7 +1033,7 @@ int phy_init_eee(struct phy_device *phydev, bool clk_stop_enable)
 	      phydev->interface <= PHY_INTERFACE_MODE_RGMII_TXID))) {
 		int eee_lp, eee_cap, eee_adv;
 		u32 lp, cap, adv;
-		int status;
+		int idx, status;
 
 		/* Read phy status to properly get the right settings */
 		status = phy_read_status(phydev);
@@ -1065,7 +1065,8 @@ int phy_init_eee(struct phy_device *phydev, bool clk_stop_enable)
 
 		adv = mmd_eee_adv_to_ethtool_adv_t(eee_adv);
 		lp = mmd_eee_adv_to_ethtool_adv_t(eee_lp);
-		if (!phy_check_valid(phydev->speed, phydev->duplex, lp & adv))
+		idx = phy_find_setting(phydev->speed, phydev->duplex);
+		if (!(lp & adv & settings[idx].setting))
 			goto eee_exit;
 
 		if (clk_stop_enable) {

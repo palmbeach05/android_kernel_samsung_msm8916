@@ -23,27 +23,40 @@ ALC267/268
 
 ALC269/270/275/276/28x/29x
 ======
-  laptop-amic		Laptops with analog-mic input
-  laptop-dmic		Laptops with digital-mic input
-  alc269-dmic		Enable ALC269(VA) digital mic workaround
-  alc271-dmic		Enable ALC271X digital mic workaround
-  inv-dmic		Inverted internal mic workaround
-  lenovo-dock   	Enables docking station I/O for some Lenovos
+  laptop-amic	Laptops with analog-mic input
+  laptop-dmic	Laptops with digital-mic input
+  alc269-dmic	Enable ALC269(VA) digital mic workaround
+  alc271-dmic	Enable ALC271X digital mic workaround
+  inv-dmic	Inverted internal mic workaround
+  lenovo-dock   Enables docking station I/O for some Lenovos
   dell-headset-multi	Headset jack, which can also be used as mic-in
   dell-headset-dock	Headset jack (without mic-in), and also dock I/O
 
 ALC66x/67x/892
 ==============
-  mario			Chromebook mario model fixup
-  asus-mode1		ASUS
-  asus-mode2		ASUS
-  asus-mode3		ASUS
-  asus-mode4		ASUS
-  asus-mode5		ASUS
-  asus-mode6		ASUS
-  asus-mode7		ASUS
-  asus-mode8		ASUS
-  inv-dmic		Inverted internal mic workaround
+  mario		Chromebook mario model fixup
+  asus-mode1	ASUS
+  asus-mode2	ASUS
+  asus-mode3	ASUS
+  asus-mode4	ASUS
+  asus-mode5	ASUS
+  asus-mode6	ASUS
+  asus-mode7	ASUS
+  asus-mode8	ASUS
+  inv-dmic	Inverted internal mic workaround
+
+ALC662/663/272
+==============
+  mario		Chromebook mario model fixup
+  asus-mode1	ASUS
+  asus-mode2	ASUS
+  asus-mode3	ASUS
+  asus-mode4	ASUS
+  asus-mode5	ASUS
+  asus-mode6	ASUS
+  asus-mode7	ASUS
+  asus-mode8	ASUS
+  inv-dmic	Inverted internal mic workaround
   dell-headset-multi	Headset jack, which can also be used as mic-in
 
 ALC680

@@ -1422,7 +1422,6 @@ static int sh_eth_rx(struct net_device *ndev, u32 intr_status)
 		desc_status >>= 16;
 #endif
 
-		skb = mdp->rx_skbuff[entry];
 		if (desc_status & (RD_RFS1 | RD_RFS2 | RD_RFS3 | RD_RFS4 |
 				   RD_RFS5 | RD_RFS6 | RD_RFS10)) {
 			ndev->stats.rx_errors++;

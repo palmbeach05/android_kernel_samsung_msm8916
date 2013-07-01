@@ -2213,23 +2213,18 @@ static int mos7810_check(struct usb_serial *serial)
 static int mos7840_probe(struct usb_serial *serial,
 				const struct usb_device_id *id)
 {
-	u16 product = le16_to_cpu(serial->dev->descriptor.idProduct);
+	__u16 data = 0x00;
 	u8 *buf;
-	int device_type;
-
-	if (product == MOSCHIP_DEVICE_ID_7810 ||
-		product == MOSCHIP_DEVICE_ID_7820) {
-		device_type = product;
-		goto out;
-	}
+	int mos7840_num_ports;
 
 	buf = kzalloc(VENDOR_READ_LENGTH, GFP_KERNEL);
-	if (!buf)
-		return -ENOMEM;
-
-	usb_control_msg(serial->dev, usb_rcvctrlpipe(serial->dev, 0),
+	if (buf) {
+		usb_control_msg(serial->dev, usb_rcvctrlpipe(serial->dev, 0),
 			MCS_RDREQ, MCS_RD_RTYPE, 0, GPIO_REGISTER, buf,
 			VENDOR_READ_LENGTH, MOS_WDR_TIMEOUT);
+		data = *buf;
+		kfree(buf);
+	}
 
 	/* For a MCS7840 device GPIO0 must be set to 1 */
 	if (buf[0] & 0x01)

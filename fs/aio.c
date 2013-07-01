@@ -431,7 +431,6 @@ static void kill_ioctx(struct mm_struct *mm, struct kioctx *ctx)
 	if (!atomic_xchg(&ctx->dead, 1)) {
 		spin_lock(&mm->ioctx_lock);
 		hlist_del_rcu(&ctx->list);
-		spin_unlock(&mm->ioctx_lock);
 
 		/*
 		 * It'd be more correct to do this in free_ioctx(), after all

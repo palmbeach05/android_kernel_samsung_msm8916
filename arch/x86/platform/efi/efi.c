@@ -60,6 +60,19 @@
 
 static efi_char16_t efi_dummy_name[6] = { 'D', 'U', 'M', 'M', 'Y', 0 };
 
+struct efi __read_mostly efi = {
+	.mps        = EFI_INVALID_TABLE_ADDR,
+	.acpi       = EFI_INVALID_TABLE_ADDR,
+	.acpi20     = EFI_INVALID_TABLE_ADDR,
+	.smbios     = EFI_INVALID_TABLE_ADDR,
+	.sal_systab = EFI_INVALID_TABLE_ADDR,
+	.boot_info  = EFI_INVALID_TABLE_ADDR,
+	.hcdp       = EFI_INVALID_TABLE_ADDR,
+	.uga        = EFI_INVALID_TABLE_ADDR,
+	.uv_systab  = EFI_INVALID_TABLE_ADDR,
+};
+EXPORT_SYMBOL(efi);
+
 struct efi_memory_map memmap;
 
 static struct efi efi_phys __initdata;
@@ -71,6 +84,7 @@ static __initdata efi_config_table_type_t arch_tables[] = {
 #endif
 	{NULL_GUID, NULL, 0},
 };
+unsigned long x86_efi_facility;
 
 /*
  * Returns 1 if 'facility' is enabled, 0 otherwise.
@@ -652,7 +666,7 @@ void __init efi_init(void)
 	if (efi_systab_init(efi_phys.systab))
 		return;
 
-	set_bit(EFI_SYSTEM_TABLES, &efi.flags);
+	set_bit(EFI_SYSTEM_TABLES, &x86_efi_facility);
 
 	/*
 	 * Show what we know for posterity

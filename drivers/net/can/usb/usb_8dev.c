@@ -992,6 +992,9 @@ static int usb_8dev_probe(struct usb_interface *intf,
 cleanup_unregister_candev:
 	unregister_netdev(priv->netdev);
 
+cleanup_cmd_msg_buffer:
+	kfree(priv->cmd_msg_buffer);
+
 cleanup_candev:
 	free_candev(netdev);
 

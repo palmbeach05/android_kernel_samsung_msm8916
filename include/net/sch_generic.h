@@ -694,7 +694,7 @@ static inline u64 psched_l2t_ns(const struct psched_ratecfg *r,
 	if (unlikely(r->linklayer == TC_LINKLAYER_ATM))
 		return ((u64)(DIV_ROUND_UP(len,48)*53) * r->mult) >> r->shift;
 
-	return ((u64)len * r->mult) >> r->shift;
+	return ((u64)(len + r->overhead) * r->mult) >> r->shift;
 }
 
 extern void psched_ratecfg_precompute(struct psched_ratecfg *r, const struct tc_ratespec *conf);

@@ -19,6 +19,10 @@
 #include <linux/export.h>
 #include <linux/kernel_stat.h>
 #include <linux/slab.h>
+#include <linux/tick.h>
+#include <linux/types.h>
+#include <linux/workqueue.h>
+#include <linux/cpu.h>
 
 #include "cpufreq_governor.h"
 
@@ -151,8 +155,10 @@ void gov_queue_work(struct dbs_data *dbs_data, struct cpufreq_policy *policy,
 		 */
 		__gov_queue_work(raw_smp_processor_id(), dbs_data, delay);
 	} else {
+		get_online_cpus();
 		for_each_cpu(i, policy->cpus)
 			__gov_queue_work(i, dbs_data, delay);
+		put_online_cpus();
 	}
 
 out_unlock:

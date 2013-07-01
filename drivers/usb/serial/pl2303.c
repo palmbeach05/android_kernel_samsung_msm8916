@@ -293,6 +293,10 @@ static void pl2303_set_termios(struct tty_struct *tty,
 	int baud_floor, baud_ceil;
 	int k;
 
+	/* The PL2303 is reported to lose bytes if you change
+	   serial settings even to the same values as before. Thus
+	   we actually need to filter in this specific case */
+
 	if (old_termios && !tty_termios_hw_change(&tty->termios, old_termios))
 		return;
 

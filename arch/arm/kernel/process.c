@@ -247,7 +247,6 @@ void machine_shutdown(void)
 	 */
 	preempt_disable();
 #endif
-	disable_nonboot_cpus();
 }
 
 /*

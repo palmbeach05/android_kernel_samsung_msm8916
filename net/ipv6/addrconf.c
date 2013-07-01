@@ -4538,7 +4538,6 @@ static int inet6_set_iftoken(struct inet6_dev *idev, struct in6_addr *token)
 	struct net_device *dev = idev->dev;
 	bool update_rs = false;
 	struct in6_addr ll_addr;
-
 	ASSERT_RTNL();
 
 	if (token == NULL)

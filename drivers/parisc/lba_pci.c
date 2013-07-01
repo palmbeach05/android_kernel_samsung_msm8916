@@ -1042,14 +1042,6 @@ lba_pat_resources(struct parisc_device *pa_dev, struct lba_device *lba_dev)
 		case PAT_LMMIO:
 			/* used to fix up pre-initialized MEM BARs */
 			if (!lba_dev->hba.lmmio_space.flags) {
-				unsigned long lba_len;
-
-				lba_len = ~READ_REG32(lba_dev->hba.base_addr
-						+ LBA_LMMIO_MASK);
-				if ((p->end - p->start) != lba_len)
-					p->end = extend_lmmio_len(p->start,
-						p->end, lba_len);
-
 				sprintf(lba_dev->hba.lmmio_name,
 						"PCI%02x LMMIO",
 						(int)lba_dev->hba.bus_num.start);
