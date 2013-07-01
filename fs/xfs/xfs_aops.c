@@ -855,7 +855,7 @@ xfs_vm_invalidatepage(
 	unsigned long		offset)
 {
 	trace_xfs_invalidatepage(page->mapping->host, page, offset);
-	block_invalidatepage(page, offset);
+	block_invalidatepage(page, offset, length);
 }
 
 /*

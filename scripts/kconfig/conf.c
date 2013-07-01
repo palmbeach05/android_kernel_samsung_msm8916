@@ -527,11 +527,12 @@ int main(int ac, char **av)
 			seed_env = getenv("KCONFIG_SEED");
 			if( seed_env && *seed_env ) {
 				char *endp;
-				int tmp = (int)strtol(seed_env, &endp, 10);
+				int tmp = (int)strtol(seed_env, &endp, 0);
 				if (*endp == '\0') {
 					seed = tmp;
 				}
 			}
+			fprintf( stderr, "KCONFIG_SEED=0x%X\n", seed );
 			srand(seed);
 			break;
 		}
@@ -580,61 +581,6 @@ int main(int ac, char **av)
 				"*** Can't find default configuration \"%s\"!\n"
 				"***\n"), defconfig_file);
 			exit(1);
-		}
-                name = getenv("KCONFIG_SELINUX");
-                printf("KCONFIG_SELINUX(%s)\n", name);
-                if (name) {
-                        if (conf_read_simple(name, S_DEF_USER, false)) {
-                                printf(_("***\n"
-                                        "*** Can't find selinux configuration \"%s\"!\n"
-                                        "***\n"), name);
-                                exit(1);
-                        }
-                }
-                name = getenv("KCONFIG_LOG_SELINUX");
-                printf("KCONFIG_LOG_SELINUX(%s)\n", name);
-                if (name) {
-                        if (conf_read_simple(name, S_DEF_USER, false)) {
-                                printf(_("***\n"
-                                        "*** Can't find selinux log configuration \"%s\"!\n"
-                                        "***\n"), name);
-                                exit(1);
-                        }
-                }
-                name = getenv("KCONFIG_DMVERITY");
-                printf("KCONFIG_DMVERITY(%s)\n", name);
-                if (name) {
-                        if (conf_read_simple(name, S_DEF_USER, false)) {
-                                printf(_("***\n"
-                                        "*** Can't find dmverity configuration \"%s\"!\n"
-                                        "***\n"), name);
-                                exit(1);
-                        }
-                }
-		name = getenv("KCONFIG_VARIANT");
-		printf("KCONFIG_VARIANT(%s)\n", name);
-		if (name) {
-			if (conf_read_simple(name, S_DEF_USER, false)) {
-				printf(_("***\n"
-					"*** Can't find variant configuration \"%s\"!\n"
-					"***\n"), name);
-				exit(1);
-			}
-		} else {
-			printf(_("***\n"
-				"***  You must specify VARIANT_DEFCONFIG !\n"
-				"***\n"));
-		exit(1);
-		}
-		name = getenv("KCONFIG_DEBUG");
-		printf("KCONFIG_DEBUG(%s)\n", name);
-		if (name) {
-			if (conf_read_simple(name, S_DEF_USER, false)) {
-				printf(_("***\n"
-					"*** Can't find debug configuration \"%s\"!\n"
-					"***\n"), name);
-				exit(1);
-			}
 		}
 		break;
 	case savedefconfig:

@@ -201,7 +201,8 @@ extern int buffer_heads_over_limit;
  * Generic address_space_operations implementations for buffer_head-backed
  * address_spaces.
  */
-void block_invalidatepage(struct page *page, unsigned long offset);
+void block_invalidatepage(struct page *page, unsigned int offset,
+			  unsigned int length);
 int block_write_full_page(struct page *page, get_block_t *get_block,
 				struct writeback_control *wbc);
 int block_write_full_page_endio(struct page *page, get_block_t *get_block,
@@ -275,7 +276,7 @@ static inline void get_bh(struct buffer_head *bh)
 
 static inline void put_bh(struct buffer_head *bh)
 {
-        smp_mb__before_atomic();
+        smp_mb__before_atomic_dec();
         atomic_dec(&bh->b_count);
 }
 
@@ -356,3 +357,4 @@ static inline int sync_mapping_buffers(struct address_space *mapping) { return 0
 
 #endif /* CONFIG_BLOCK */
 #endif /* _LINUX_BUFFER_HEAD_H */
+
