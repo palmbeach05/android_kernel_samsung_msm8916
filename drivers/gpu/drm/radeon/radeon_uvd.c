@@ -166,7 +166,17 @@ void radeon_uvd_fini(struct radeon_device *rdev)
 	if (!r) {
 		radeon_bo_kunmap(rdev->uvd.vcpu_bo);
 		radeon_bo_unpin(rdev->uvd.vcpu_bo);
+		rdev->uvd.cpu_addr = NULL;
+		if (!radeon_bo_pin(rdev->uvd.vcpu_bo, RADEON_GEM_DOMAIN_CPU, NULL)) {
+			radeon_bo_kmap(rdev->uvd.vcpu_bo, &rdev->uvd.cpu_addr);
+		}
 		radeon_bo_unreserve(rdev->uvd.vcpu_bo);
+
+		if (rdev->uvd.cpu_addr) {
+			radeon_fence_driver_start_ring(rdev, R600_RING_TYPE_UVD_INDEX);
+		} else {
+			rdev->fence_drv[R600_RING_TYPE_UVD_INDEX].cpu_addr = NULL;
+		}
 	}
 
 	radeon_bo_unref(&rdev->uvd.vcpu_bo);
@@ -212,8 +222,18 @@ int radeon_uvd_resume(struct radeon_device *rdev)
 
 	memcpy(rdev->uvd.cpu_addr, rdev->uvd_fw->data, rdev->uvd_fw->size);
 
-	size = radeon_bo_size(rdev->uvd.vcpu_bo);
-	size -= rdev->uvd_fw->size;
+	/* Have been pin in cpu unmap unpin */
+	radeon_bo_kunmap(rdev->uvd.vcpu_bo);
+	radeon_bo_unpin(rdev->uvd.vcpu_bo);
+
+	r = radeon_bo_pin(rdev->uvd.vcpu_bo, RADEON_GEM_DOMAIN_VRAM,
+			  &rdev->uvd.gpu_addr);
+	if (r) {
+		radeon_bo_unreserve(rdev->uvd.vcpu_bo);
+		radeon_bo_unref(&rdev->uvd.vcpu_bo);
+		dev_err(rdev->dev, "(%d) UVD bo pin failed\n", r);
+		return r;
+	}
 
 	ptr = rdev->uvd.cpu_addr;
 	ptr += rdev->uvd_fw->size;

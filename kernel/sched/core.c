@@ -3080,7 +3080,7 @@ void scheduler_ipi(void)
 	int cpu = smp_processor_id();
 
 	if (llist_empty(&this_rq()->wake_list)
-			&& !tick_nohz_full_cpu(cpu)
+			&& !tick_nohz_full_cpu(smp_processor_id())
 			&& !got_nohz_idle_kick()
 			&& !got_boost_kick())
 		return;

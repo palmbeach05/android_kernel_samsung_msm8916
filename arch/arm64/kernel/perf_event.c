@@ -1827,12 +1827,7 @@ void perf_callchain_user(struct perf_callchain_entry *entry,
 	}
 
 	perf_callchain_store(entry, regs->pc);
-
-	if (!compat_user_mode(regs)) {
-		/* AARCH64 mode */
-		struct frame_tail __user *tail;
-
-		tail = (struct frame_tail __user *)regs->regs[29];
+	tail = (struct frame_tail __user *)regs->regs[29];
 
 		while (entry->nr < PERF_MAX_STACK_DEPTH &&
 		       tail && !((unsigned long)tail & 0xf))
