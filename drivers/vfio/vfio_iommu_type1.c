@@ -355,14 +355,28 @@ static long vfio_remove_dma_overlap(struct vfio_iommu *iommu, dma_addr_t start,
 	}
 
 	/* Split existing */
-	npage_lo = (start - dma->iova) >> PAGE_SHIFT;
-	npage_hi = dma->npage - (size >> PAGE_SHIFT) - npage_lo;
 
-	split = kzalloc(sizeof *split, GFP_KERNEL);
+	/*
+	 * Allocate our tracking structure early even though it may not
+	 * be used.  An Allocation failure later loses track of pages and
+	 * is more difficult to unwind.
+	 */
+	split = kzalloc(sizeof(*split), GFP_KERNEL);
 	if (!split)
 		return -ENOMEM;
 
-	vfio_dma_unmap(iommu, start, size >> PAGE_SHIFT, dma->prot);
+	offset = start - dma->iova;
+
+	ret = vfio_unmap_unpin(iommu, dma, start, size);
+	if (ret || !*size) {
+		kfree(split);
+		return ret;
+	}
+
+	tmp = dma->size;
+
+	/* Resize the lower vfio_dma in place, before the below insert */
+	dma->size = offset;
 
 	dma->npage = npage_lo;
 
