@@ -91,11 +91,10 @@ static void led_pwm_cleanup(struct led_pwm_priv *priv)
 	}
 }
 
-static struct led_pwm_priv *led_pwm_create_of(struct platform_device *pdev)
+static int led_pwm_priv *led_pwm_create_of(struct platform_device *pdev,
+			     struct led_pwm_priv *priv)
 {
-	struct device_node *node = pdev->dev.of_node;
 	struct device_node *child;
-	struct led_pwm_priv *priv;
 	int count, ret;
 
 	/* count LEDs in this device, so we know how much to allocate */
@@ -118,6 +117,7 @@ static struct led_pwm_priv *led_pwm_create_of(struct platform_device *pdev)
 		if (IS_ERR(led_dat->pwm)) {
 			dev_err(&pdev->dev, "unable to request PWM for %s\n",
 				led_dat->cdev.name);
+			ret = PTR_ERR(led_dat->pwm);
 			goto err;
 		}
 		/* Get the period from PWM core when n*/
