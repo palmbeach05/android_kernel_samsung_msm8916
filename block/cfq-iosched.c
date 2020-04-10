@@ -37,7 +37,7 @@ static const int cfq_slice_async_rq = 2;
  * all the idling on queues/service tree level and one should
  * see an overall improved throughput on faster storage devices"
  */
-static int cfq_slice_idle = 0;
+static int cfq_slice_idle = HZ / 125;
 static int cfq_group_idle = HZ / 125;
 static const int cfq_target_latency = HZ * 3/10; /* 300 ms */
 static const int cfq_hist_divisor = 4;
@@ -3679,8 +3679,8 @@ cfq_get_queue(struct cfq_data *cfqd, bool is_sync, struct cfq_io_cq *cic,
 {
 	int ioprio_class = IOPRIO_PRIO_CLASS(cic->ioprio);
 	int ioprio = IOPRIO_PRIO_DATA(cic->ioprio);
-	struct cfq_queue **async_cfqq;
-	struct cfq_queue *cfqq;
+	struct cfq_queue **async_cfqq = NULL;
+	struct cfq_queue *cfqq = NULL;
 
 	if (!is_sync) {
 		if (!ioprio_valid(cic->ioprio)) {
