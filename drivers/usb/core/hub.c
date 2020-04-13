@@ -5099,7 +5099,6 @@ static void hub_events(void)
  loop_disconnected:
 		usb_unlock_device(hdev);
 		usb_put_dev(hdev);
- hub_disconnected:
 		kref_put(&hub->kref, hub_release);
 
         } /* end while (1) */
