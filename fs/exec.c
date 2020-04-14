@@ -110,7 +110,8 @@ SYSCALL_DEFINE1(uselib, const char __user *, library)
 	static const struct open_flags uselib_flags = {
 		.open_flag = O_LARGEFILE | O_RDONLY | __FMODE_EXEC,
 		.acc_mode = MAY_READ | MAY_EXEC | MAY_OPEN,
-		.intent = LOOKUP_OPEN
+		.intent = LOOKUP_OPEN,
+		.lookup_flags = LOOKUP_FOLLOW
 	};
 
 	if (IS_ERR(tmp))
@@ -1265,7 +1266,7 @@ static int check_unsafe_exec(struct linux_binprm *bprm)
 	 * This isn't strictly necessary, but it makes it harder for LSMs to
 	 * mess up.
 	 */
-	if (current->no_new_privs)
+	if (task_no_new_privs(current))
 		bprm->unsafe |= LSM_UNSAFE_NO_NEW_PRIVS;
 
 	n_fs = 1;
@@ -1305,7 +1306,7 @@ static void bprm_fill_uid(struct linux_binprm *bprm)
 	if (bprm->file->f_path.mnt->mnt_flags & MNT_NOSUID)
 		return;
 
-	if (current->no_new_privs)
+	if (task_no_new_privs(current))
 		return;
 
 	inode = file_inode(bprm->file);
