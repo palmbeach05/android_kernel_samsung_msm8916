@@ -1306,6 +1306,10 @@ static int fanout_add(struct sock *sk, u16 id, u16 type_flags)
 
 	mutex_lock(&fanout_mutex);
 
+	err = -EINVAL;
+	if (!po->running)
+		goto out;
+
 	err = -EALREADY;
 	if (po->fanout)
 		goto out;
@@ -1380,13 +1384,14 @@ static void fanout_release(struct sock *sk)
 	if (f) {
 		po->fanout = NULL;
 
-		if (atomic_dec_and_test(&f->sk_ref)) {
+		if (atomic_dec_and_test(&f->sk_ref))
 			list_del(&f->list);
-			dev_remove_pack(&f->prot_hook);
-			kfree(f);
-		}
+		else
+			f = NULL;
 	}
 	mutex_unlock(&fanout_mutex);
+
+	return f;
 }
 
 static const struct proto_ops packet_ops;
