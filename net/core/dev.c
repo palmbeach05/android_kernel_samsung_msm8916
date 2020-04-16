@@ -2350,7 +2350,7 @@ static inline bool skb_needs_check(struct sk_buff *skb, bool tx_path)
 {
 	if (tx_path)
 		return skb->ip_summed != CHECKSUM_PARTIAL &&
-		       skb->ip_summed != CHECKSUM_UNNECESSARY;
+		       skb->ip_summed != CHECKSUM_NONE;
 
 	return skb->ip_summed == CHECKSUM_NONE;
 }
@@ -6092,8 +6092,8 @@ static int dev_cpu_callback(struct notifier_block *nfb,
 	 */
 	while (!list_empty(&oldsd->poll_list)) {
 		struct napi_struct *napi = list_first_entry(&oldsd->poll_list,
-							struct napi_struct,
-							poll_list);
+							    struct napi_struct,
+							    poll_list);
 
 		list_del_init(&napi->poll_list);
 		if (napi->poll == process_backlog)
