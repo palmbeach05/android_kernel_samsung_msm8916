@@ -3431,7 +3431,11 @@ sctp_disposition_t sctp_sf_ootb(struct net *net,
 		/* Report violation if chunk len overflows */
 		ch_end = ((__u8 *)ch) + WORD_ROUND(ntohs(ch->length));
 		if (ch_end > skb_tail_pointer(skb))
+<<<<<<< HEAD
 			return sctp_sf_violation_chunklen(net, ep, asoc, type, arg,F>>
+=======
+			return sctp_sf_violation_chunklen(net, ep, asoc, type, arg,
+>>>>>>> v3.10.108
 						  commands);
 
 		/* Now that we know we at least have a chunk header,
