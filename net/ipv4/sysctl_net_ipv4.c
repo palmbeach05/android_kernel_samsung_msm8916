@@ -56,13 +56,13 @@ static void set_local_port_range(int range[2])
 }
 
 /* Validate changes from /proc interface. */
-static int ipv4_local_port_range(ctl_table *table, int write,
+static int ipv4_local_port_range(struct ctl_table *table, int write,
 				 void __user *buffer,
 				 size_t *lenp, loff_t *ppos)
 {
 	int ret;
 	int range[2];
-	ctl_table tmp = {
+	struct ctl_table tmp = {
 		.data = &range,
 		.maxlen = sizeof(range),
 		.mode = table->mode,
@@ -107,7 +107,7 @@ static void set_ping_group_range(struct ctl_table *table, kgid_t low, kgid_t hig
 }
 
 /* Validate changes from /proc interface. */
-static int ipv4_ping_group_range(ctl_table *table, int write,
+static int ipv4_ping_group_range(struct ctl_table *table, int write,
 				 void __user *buffer,
 				 size_t *lenp, loff_t *ppos)
 {
@@ -115,7 +115,7 @@ static int ipv4_ping_group_range(ctl_table *table, int write,
 	int ret;
 	gid_t urange[2];
 	kgid_t low, high;
-	ctl_table tmp = {
+	struct ctl_table tmp = {
 		.data = &urange,
 		.maxlen = sizeof(urange),
 		.mode = table->mode,
@@ -157,11 +157,11 @@ static int proc_tcp_default_init_rwnd(ctl_table *ctl, int write,
 	return ret;
 }
 
-static int proc_tcp_congestion_control(ctl_table *ctl, int write,
+static int proc_tcp_congestion_control(struct ctl_table *ctl, int write,
 				       void __user *buffer, size_t *lenp, loff_t *ppos)
 {
 	char val[TCP_CA_NAME_MAX];
-	ctl_table tbl = {
+	struct ctl_table tbl = {
 		.data = val,
 		.maxlen = TCP_CA_NAME_MAX,
 	};
@@ -175,12 +175,12 @@ static int proc_tcp_congestion_control(ctl_table *ctl, int write,
 	return ret;
 }
 
-static int proc_tcp_available_congestion_control(ctl_table *ctl,
+static int proc_tcp_available_congestion_control(struct ctl_table *ctl,
 						 int write,
 						 void __user *buffer, size_t *lenp,
 						 loff_t *ppos)
 {
-	ctl_table tbl = { .maxlen = TCP_CA_BUF_MAX, };
+	struct ctl_table tbl = { .maxlen = TCP_CA_BUF_MAX, };
 	int ret;
 
 	tbl.data = kmalloc(tbl.maxlen, GFP_USER);
@@ -192,12 +192,12 @@ static int proc_tcp_available_congestion_control(ctl_table *ctl,
 	return ret;
 }
 
-static int proc_allowed_congestion_control(ctl_table *ctl,
+static int proc_allowed_congestion_control(struct ctl_table *ctl,
 					   int write,
 					   void __user *buffer, size_t *lenp,
 					   loff_t *ppos)
 {
-	ctl_table tbl = { .maxlen = TCP_CA_BUF_MAX };
+	struct ctl_table tbl = { .maxlen = TCP_CA_BUF_MAX };
 	int ret;
 
 	tbl.data = kmalloc(tbl.maxlen, GFP_USER);
@@ -212,7 +212,7 @@ static int proc_allowed_congestion_control(ctl_table *ctl,
 	return ret;
 }
 
-static int ipv4_tcp_mem(ctl_table *ctl, int write,
+static int ipv4_tcp_mem(struct ctl_table *ctl, int write,
 			   void __user *buffer, size_t *lenp,
 			   loff_t *ppos)
 {
@@ -223,7 +223,7 @@ static int ipv4_tcp_mem(ctl_table *ctl, int write,
 	struct mem_cgroup *memcg;
 #endif
 
-	ctl_table tmp = {
+	struct ctl_table tmp = {
 		.data = &vec,
 		.maxlen = sizeof(vec),
 		.mode = ctl->mode,
@@ -255,10 +255,11 @@ static int ipv4_tcp_mem(ctl_table *ctl, int write,
 	return 0;
 }
 
-static int proc_tcp_fastopen_key(ctl_table *ctl, int write, void __user *buffer,
-				 size_t *lenp, loff_t *ppos)
+static int proc_tcp_fastopen_key(struct ctl_table *ctl, int write,
+				 void __user *buffer, size_t *lenp,
+				 loff_t *ppos)
 {
-	ctl_table tbl = { .maxlen = (TCP_FASTOPEN_KEY_LENGTH * 2 + 10) };
+	struct ctl_table tbl = { .maxlen = (TCP_FASTOPEN_KEY_LENGTH * 2 + 10) };
 	struct tcp_fastopen_context *ctxt;
 	int ret;
 	u32  user_key[4]; /* 16 bytes, matching TCP_FASTOPEN_KEY_LENGTH */

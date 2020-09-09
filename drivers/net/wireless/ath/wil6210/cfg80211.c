@@ -449,7 +449,7 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
 
 	memcpy(conn.bssid, bss->bssid, ETH_ALEN);
 	memcpy(conn.dst_mac, bss->bssid, ETH_ALEN);
-
+	
 	set_bit(wil_status_fwconnecting, &wil->status);
 
 	rc = wmi_send(wil, WMI_CONNECT_CMDID, &conn, sizeof(conn));
@@ -723,17 +723,17 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
 	wil_print_bcon_data(bcon);
 	wil_print_crypto(wil, crypto);
 
-	if (wil_fix_bcon(wil, bcon)) {
+	if (wil_fix_bcon(wil, bcon))
 		wil_dbg_misc(wil, "Fixed bcon\n");
-		wil_print_bcon_data(bcon);
-	}
 
-	mutex_lock(&wil->mutex);
-
-	__wil_down(wil);
-	rc = __wil_up(wil);
+	rc = wil_reset(wil);
 	if (rc)
 		goto out;
+
+	/* Rx VRING. */
+	rc = wil_rx_init(wil);
+	if (rc)
+		return rc;
 
 	rc = wmi_set_ssid(wil, info->ssid_len, info->ssid);
 	if (rc)
@@ -758,7 +758,7 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
 	rc = wmi_pcp_start(wil, info->beacon_interval, wmi_nettype,
 			   channel->hw_value);
 	if (rc)
-		goto out;
+		return rc;
 
 	netif_carrier_on(ndev);
 

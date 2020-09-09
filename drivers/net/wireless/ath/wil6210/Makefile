@@ -19,3 +19,4 @@ wil6210-$(CONFIG_WIL6210_PLATFORM_MSM) += wil_platform_msm.o
 CFLAGS_trace.o := -I$(src)
 
 subdir-ccflags-y += -D__CHECK_ENDIAN__
+
