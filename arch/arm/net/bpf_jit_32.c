@@ -900,7 +900,8 @@ void bpf_jit_compile(struct sk_filter *fp)
 #endif
 
 	alloc_size = 4 * ctx.idx;
-	ctx.target = module_alloc(alloc_size);
+	ctx.target = module_alloc(max(sizeof(struct work_struct),
+				      alloc_size));
 	if (unlikely(ctx.target == NULL))
 		goto out;
 
@@ -926,8 +927,19 @@ out:
 	return;
 }
 
+static void bpf_jit_free_worker(struct work_struct *work)
+{
+	module_memfree(work);
+}
+
 void bpf_jit_free(struct sk_filter *fp)
 {
-	if (fp->bpf_func != sk_run_filter)
-		module_free(NULL, fp->bpf_func);
+	struct work_struct *work;
+
+	if (fp->bpf_func != sk_run_filter) {
+		work = (struct work_struct *)fp->bpf_func;
+
+		INIT_WORK(work, bpf_jit_free_worker);
+		schedule_work(work);
+	}
 }

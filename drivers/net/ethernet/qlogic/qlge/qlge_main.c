@@ -4957,4 +4957,15 @@ static struct pci_driver qlge_driver = {
 	.err_handler = &qlge_err_handler
 };
 
-module_pci_driver(qlge_driver);
+static int __init qlge_init_module(void)
+{
+	return pci_register_driver(&qlge_driver);
+}
+
+static void __exit qlge_exit(void)
+{
+	pci_unregister_driver(&qlge_driver);
+}
+
+module_init(qlge_init_module);
+module_exit(qlge_exit);

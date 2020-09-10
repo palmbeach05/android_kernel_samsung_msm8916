@@ -2,7 +2,9 @@ if ETRAX_ARCH_V32
 
 config ETRAX_ETHERNET
 	bool "Ethernet support"
-	depends on ETRAX_ARCH_V32 && NETDEVICES
+	depends on ETRAX_ARCH_V32
+	select ETHERNET
+	select NET_CORE
 	select MII
 	help
 	  This option enables the ETRAX FS built-in 10/100Mbit Ethernet

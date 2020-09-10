@@ -57,9 +57,9 @@ static void sctp_ulpevent_release_frag_data(struct sctp_ulpevent *event);
 
 
 /* Initialize an ULP event from an given skb.  */
-static void sctp_ulpevent_init(struct sctp_ulpevent *event,
-			       int msg_flags,
-			       unsigned int len)
+SCTP_STATIC void sctp_ulpevent_init(struct sctp_ulpevent *event,
+				    int msg_flags,
+				    unsigned int len)
 {
 	memset(event, 0, sizeof(struct sctp_ulpevent));
 	event->msg_flags = msg_flags;
@@ -67,8 +67,8 @@ static void sctp_ulpevent_init(struct sctp_ulpevent *event,
 }
 
 /* Create a new sctp_ulpevent.  */
-static struct sctp_ulpevent *sctp_ulpevent_new(int size, int msg_flags,
-					       gfp_t gfp)
+SCTP_STATIC struct sctp_ulpevent *sctp_ulpevent_new(int size, int msg_flags,
+						    gfp_t gfp)
 {
 	struct sctp_ulpevent *event;
 	struct sk_buff *skb;

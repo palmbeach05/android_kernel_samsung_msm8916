@@ -1999,22 +1999,6 @@ TRACE_EVENT(cfg80211_send_rx_assoc,
 		  NETDEV_PR_ARG, MAC_PR_ARG(bssid), CHAN_PR_ARG)
 );
 
-DECLARE_EVENT_CLASS(netdev_frame_event,
-	TP_PROTO(struct net_device *netdev, const u8 *buf, int len),
-	TP_ARGS(netdev, buf, len),
-	TP_STRUCT__entry(
-		NETDEV_ENTRY
-		__dynamic_array(u8, frame, len)
-	),
-	TP_fast_assign(
-		NETDEV_ASSIGN;
-		memcpy(__get_dynamic_array(frame), buf, len);
-	),
-	TP_printk(NETDEV_PR_FMT ", ftype:0x%.2x",
-		  NETDEV_PR_ARG,
-		  le16_to_cpup((__le16 *)__get_dynamic_array(frame)))
-);
-
 DEFINE_EVENT(netdev_evt_only, __cfg80211_send_deauth,
 	TP_PROTO(struct net_device *netdev),
 	TP_ARGS(netdev)

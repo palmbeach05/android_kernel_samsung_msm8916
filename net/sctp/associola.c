@@ -86,9 +86,10 @@ static struct sctp_association *sctp_association_init(struct sctp_association *a
 
 	/* Discarding const is appropriate here.  */
 	asoc->ep = (struct sctp_endpoint *)ep;
-	asoc->base.sk = (struct sock *)sk;
-
 	sctp_endpoint_hold(asoc->ep);
+
+	/* Hold the sock.  */
+	asoc->base.sk = (struct sock *)sk;
 	sock_hold(asoc->base.sk);
 
 	/* Initialize the common base substructure.  */
@@ -102,7 +103,13 @@ static struct sctp_association *sctp_association_init(struct sctp_association *a
 	sctp_bind_addr_init(&asoc->base.bind_addr, ep->base.bind_addr.port);
 
 	asoc->state = SCTP_STATE_CLOSED;
-	asoc->cookie_life = ms_to_ktime(sp->assocparams.sasoc_cookie_life);
+
+	/* Set these values from the socket values, a conversion between
+	 * millsecons to seconds/microseconds must also be done.
+	 */
+	asoc->cookie_life.tv_sec = sp->assocparams.sasoc_cookie_life / 1000;
+	asoc->cookie_life.tv_usec = (sp->assocparams.sasoc_cookie_life % 1000)
+					* 1000;
 	asoc->frag_point = 0;
 	asoc->user_frag = sp->user_frag;
 
@@ -336,8 +343,8 @@ static struct sctp_association *sctp_association_init(struct sctp_association *a
 	return asoc;
 
 fail_init:
-	sock_put(asoc->base.sk);
 	sctp_endpoint_put(asoc->ep);
+	sock_put(asoc->base.sk);
 	return NULL;
 }
 
@@ -349,7 +356,7 @@ struct sctp_association *sctp_association_new(const struct sctp_endpoint *ep,
 {
 	struct sctp_association *asoc;
 
-	asoc = kzalloc(sizeof(*asoc), gfp);
+	asoc = t_new(struct sctp_association, gfp);
 	if (!asoc)
 		goto fail;
 

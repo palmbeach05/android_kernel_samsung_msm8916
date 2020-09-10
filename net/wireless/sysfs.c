@@ -83,7 +83,6 @@ static int wiphy_uevent(struct device *dev, struct kobj_uevent_env *env)
 	return 0;
 }
 
-#ifdef CONFIG_PM
 static int wiphy_suspend(struct device *dev, pm_message_t state)
 {
 	struct cfg80211_registered_device *rdev = dev_to_rdev(dev);
@@ -118,7 +117,6 @@ static int wiphy_resume(struct device *dev)
 
 	return ret;
 }
-#endif
 
 static const void *wiphy_namespace(struct device *d)
 {
@@ -133,10 +131,8 @@ struct class ieee80211_class = {
 	.dev_release = wiphy_dev_release,
 	.dev_attrs = ieee80211_dev_attrs,
 	.dev_uevent = wiphy_uevent,
-#ifdef CONFIG_PM
 	.suspend = wiphy_suspend,
 	.resume = wiphy_resume,
-#endif
 	.ns_type = &net_ns_type_operations,
 	.namespace = wiphy_namespace,
 };

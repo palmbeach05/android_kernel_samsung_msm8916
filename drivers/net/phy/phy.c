@@ -313,8 +313,7 @@ int phy_ethtool_gset(struct phy_device *phydev, struct ethtool_cmd *cmd)
 	cmd->duplex = phydev->duplex;
 	cmd->port = PORT_MII;
 	cmd->phy_address = phydev->addr;
-	cmd->transceiver = phy_is_internal(phydev) ?
-		XCVR_INTERNAL : XCVR_EXTERNAL;
+	cmd->transceiver = XCVR_EXTERNAL;
 	cmd->autoneg = phydev->autoneg;
 
 	return 0;
@@ -438,6 +437,8 @@ out_unlock:
 }
 EXPORT_SYMBOL(phy_start_aneg);
 
+
+static void phy_change(struct work_struct *work);
 
 /**
  * phy_start_machine - start PHY state machine tracking
@@ -583,6 +584,8 @@ int phy_start_interrupts(struct phy_device *phydev)
 {
 	int err = 0;
 
+	INIT_WORK(&phydev->phy_queue, phy_change);
+
 	atomic_set(&phydev->irq_disable, 0);
 	if (request_irq(phydev->irq, phy_interrupt,
 				IRQF_SHARED,
@@ -639,7 +642,7 @@ EXPORT_SYMBOL(phy_stop_interrupts);
  * phy_change - Scheduled by the phy_interrupt/timer to handle PHY changes
  * @work: work_struct that describes the work to be done
  */
-void phy_change(struct work_struct *work)
+static void phy_change(struct work_struct *work)
 {
 	int err;
 	struct phy_device *phydev =
@@ -698,7 +701,7 @@ void phy_stop(struct phy_device *phydev)
 	if (PHY_HALTED == phydev->state)
 		goto out_unlock;
 
-	if (phy_interrupt_is_valid(phydev)) {
+	if (phydev->irq != PHY_POLL) {
 		/* Disable PHY Interrupts */
 		phy_config_interrupt(phydev, PHY_INTERRUPT_DISABLED);
 
@@ -844,9 +847,8 @@ void phy_state_machine(struct work_struct *work)
 			break;
 		case PHY_RUNNING:
 			/* Only register a CHANGE if we are
-			 * polling or ignoring interrupts
-			 */
-			if (!phy_interrupt_is_valid(phydev))
+			 * polling */
+			if (PHY_POLL == phydev->irq)
 				phydev->state = PHY_CHANGELINK;
 			break;
 		case PHY_CHANGELINK:
@@ -865,7 +867,7 @@ void phy_state_machine(struct work_struct *work)
 
 			phydev->adjust_link(phydev->attached_dev);
 
-			if (phy_interrupt_is_valid(phydev))
+			if (PHY_POLL != phydev->irq)
 				err = phy_config_interrupt(phydev,
 						PHY_INTERRUPT_ENABLED);
 			break;
@@ -938,14 +940,6 @@ void phy_state_machine(struct work_struct *work)
 	queue_delayed_work(system_power_efficient_wq, &phydev->state_queue,
 			PHY_STATE_TIME * HZ);
 }
-
-void phy_mac_interrupt(struct phy_device *phydev, int new_link)
-{
-	cancel_work_sync(&phydev->phy_queue);
-	phydev->link = new_link;
-	schedule_work(&phydev->phy_queue);
-}
-EXPORT_SYMBOL(phy_mac_interrupt);
 
 static inline void mmd_phy_indirect(struct mii_bus *bus, int prtad, int devad,
 				    int addr)

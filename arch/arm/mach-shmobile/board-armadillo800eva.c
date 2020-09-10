@@ -378,7 +378,7 @@ static struct resource sh_eth_resources[] = {
 };
 
 static struct platform_device sh_eth_device = {
-	.name = "r8a7740-gether",
+	.name = "sh-eth",
 	.id = -1,
 	.dev = {
 		.platform_data = &sh_eth_platdata,

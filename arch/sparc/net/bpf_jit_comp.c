@@ -796,7 +796,9 @@ cond_branch:			f_offset = addrs[i + filter[i].jf];
 			break;
 		}
 		if (proglen == oldproglen) {
-			image = module_alloc(proglen);
+			image = module_alloc(max_t(unsigned int,
+						   proglen,
+						   sizeof(struct work_struct)));
 			if (!image)
 				goto out;
 		}
@@ -815,8 +817,20 @@ out:
 	return;
 }
 
+static void jit_free_defer(struct work_struct *arg)
+{
+	module_memfree(arg);
+}
+
+/* run from softirq, we must use a work_struct to call
+ * module_memfree() from process context
+ */
 void bpf_jit_free(struct sk_filter *fp)
 {
-	if (fp->bpf_func != sk_run_filter)
-		module_free(NULL, fp->bpf_func);
+	if (fp->bpf_func != sk_run_filter) {
+		struct work_struct *work = (struct work_struct *)fp->bpf_func;
+
+		INIT_WORK(work, jit_free_defer);
+		schedule_work(work);
+	}
 }

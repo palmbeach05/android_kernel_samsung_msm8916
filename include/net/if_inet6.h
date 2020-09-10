@@ -76,7 +76,6 @@ struct inet6_ifaddr {
 	bool			tokenized;
 
 	struct rcu_head		rcu;
-	struct in6_addr		peer_addr;
 };
 
 struct ip6_sf_socklist {
@@ -168,7 +167,6 @@ struct inet6_dev {
 	struct net_device	*dev;
 
 	struct list_head	addr_list;
-	int			valid_ll_addr_cnt;
 
 	struct ifmcaddr6	*mc_list;
 	struct ifmcaddr6	*mc_tomb;
@@ -176,12 +174,10 @@ struct inet6_dev {
 	unsigned char		mc_qrv;
 	unsigned char		mc_gq_running;
 	unsigned char		mc_ifc_count;
-	unsigned char		mc_dad_count;
 	unsigned long		mc_v1_seen;
 	unsigned long		mc_maxdelay;
 	struct timer_list	mc_gq_timer;	/* general query timer */
 	struct timer_list	mc_ifc_timer;	/* interface change timer */
-	struct timer_list	mc_dad_timer;	/* dad complete mc timer */
 
 	struct ifacaddr6	*ac_list;
 	rwlock_t		lock;
@@ -198,6 +194,7 @@ struct inet6_dev {
 	struct in6_addr		token;
 
 	struct neigh_parms	*nd_parms;
+	struct inet6_dev	*next;
 	struct ipv6_devconf	cnf;
 	struct ipv6_devstat	stats;
 

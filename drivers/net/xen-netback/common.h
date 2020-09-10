@@ -57,12 +57,8 @@ struct xenvif {
 
 	u8               fe_dev_addr[6];
 
-	/* When feature-split-event-channels = 0, tx_irq = rx_irq. */
-	unsigned int tx_irq;
-	unsigned int rx_irq;
-	/* Only used when feature-split-event-channels = 1 */
-	char tx_irq_name[IFNAMSIZ+4]; /* DEVNAME-tx */
-	char rx_irq_name[IFNAMSIZ+4]; /* DEVNAME-rx */
+	/* Physical parameters of the comms window. */
+	unsigned int     irq;
 
 	/* List of frontends to notify after a batch of frames sent. */
 	struct list_head notify_list;
@@ -120,8 +116,7 @@ struct xenvif *xenvif_alloc(struct device *parent,
 			    unsigned int handle);
 
 int xenvif_connect(struct xenvif *vif, unsigned long tx_ring_ref,
-		   unsigned long rx_ring_ref, unsigned int tx_evtchn,
-		   unsigned int rx_evtchn);
+		   unsigned long rx_ring_ref, unsigned int evtchn);
 void xenvif_disconnect(struct xenvif *vif);
 void xenvif_free(struct xenvif *vif);
 
@@ -131,7 +126,6 @@ void xenvif_get_rings(struct xenvif *vif);
 void xenvif_put_rings(struct xenvif *vif);
 
 int xenvif_xenbus_init(void);
-void xenvif_xenbus_fini(void);
 
 int xenvif_schedulable(struct xenvif *vif);
 
@@ -168,7 +162,5 @@ void xenvif_carrier_off(struct xenvif *vif);
 
 /* Returns number of ring slots required to send an skb to the frontend */
 unsigned int xen_netbk_count_skb_slots(struct xenvif *vif, struct sk_buff *skb);
-
-extern bool separate_tx_rx_irq;
 
 #endif /* __XEN_NETBACK__COMMON_H__ */

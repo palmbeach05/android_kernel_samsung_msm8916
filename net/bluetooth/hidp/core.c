@@ -76,19 +76,25 @@ static void hidp_copy_session(struct hidp_session *session, struct hidp_conninfo
 	ci->flags = session->flags;
 	ci->state = BT_CONNECTED;
 
+	ci->vendor  = 0x0000;
+	ci->product = 0x0000;
+	ci->version = 0x0000;
+
 	if (session->input) {
 		ci->vendor  = session->input->id.vendor;
 		ci->product = session->input->id.product;
 		ci->version = session->input->id.version;
 		if (session->input->name)
-			strlcpy(ci->name, session->input->name, 128);
+			strncpy(ci->name, session->input->name, 128);
 		else
-			strlcpy(ci->name, "HID Boot Device", 128);
-	} else if (session->hid) {
+			strncpy(ci->name, "HID Boot Device", 128);
+	}
+
+	if (session->hid) {
 		ci->vendor  = session->hid->vendor;
 		ci->product = session->hid->product;
 		ci->version = session->hid->version;
-		strlcpy(ci->name, session->hid->name, 128);
+		strncpy(ci->name, session->hid->name, 128);
 	}
 }
 

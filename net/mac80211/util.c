@@ -560,9 +560,6 @@ void ieee80211_iterate_active_interfaces(
 	list_for_each_entry(sdata, &local->interfaces, list) {
 		switch (sdata->vif.type) {
 		case NL80211_IFTYPE_MONITOR:
-			if (!(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
-				continue;
-			break;
 		case NL80211_IFTYPE_AP_VLAN:
 			continue;
 		default:
@@ -601,9 +598,6 @@ void ieee80211_iterate_active_interfaces_atomic(
 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
 		switch (sdata->vif.type) {
 		case NL80211_IFTYPE_MONITOR:
-			if (!(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
-				continue;
-			break;
 		case NL80211_IFTYPE_AP_VLAN:
 			continue;
 		default:
@@ -1076,6 +1070,32 @@ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
 	rcu_read_unlock();
 
 	ieee80211_set_wmm_default(sdata, true);
+}
+
+u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
+			      enum ieee80211_band band)
+{
+	struct ieee80211_supported_band *sband;
+	struct ieee80211_rate *bitrates;
+	u32 mandatory_rates;
+	enum ieee80211_rate_flags mandatory_flag;
+	int i;
+
+	sband = local->hw.wiphy->bands[band];
+	if (WARN_ON(!sband))
+		return 1;
+
+	if (band == IEEE80211_BAND_2GHZ)
+		mandatory_flag = IEEE80211_RATE_MANDATORY_B;
+	else
+		mandatory_flag = IEEE80211_RATE_MANDATORY_A;
+
+	bitrates = sband->bitrates;
+	mandatory_rates = 0;
+	for (i = 0; i < sband->n_bitrates; i++)
+		if (bitrates[i].flags & mandatory_flag)
+			mandatory_rates |= BIT(i);
+	return mandatory_rates;
 }
 
 void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
@@ -1584,13 +1604,12 @@ int ieee80211_reconfig(struct ieee80211_local *local)
 				   BSS_CHANGED_ARP_FILTER |
 				   BSS_CHANGED_PS;
 
-			/* Re-send beacon info report to the driver */
-			if (sdata->u.mgd.have_beacon)
-				changed |= BSS_CHANGED_BEACON_INFO;
+			if (sdata->u.mgd.dtim_period)
+				changed |= BSS_CHANGED_DTIM_PERIOD;
 
-			sdata_lock(sdata);
+			mutex_lock(&sdata->u.mgd.mtx);
 			ieee80211_bss_info_change_notify(sdata, changed);
-			sdata_unlock(sdata);
+			mutex_unlock(&sdata->u.mgd.mtx);
 			break;
 		case NL80211_IFTYPE_ADHOC:
 			changed |= BSS_CHANGED_IBSS;

@@ -717,7 +717,6 @@ static int alx_init_sw(struct alx_priv *alx)
 	hw->dma_chnl = hw->max_dma_chnl;
 	hw->ith_tpd = alx->tx_ringsz / 3;
 	hw->link_speed = SPEED_UNKNOWN;
-	hw->duplex = DUPLEX_UNKNOWN;
 	hw->adv_cfg = ADVERTISED_Autoneg |
 		      ADVERTISED_10baseT_Half |
 		      ADVERTISED_10baseT_Full |
@@ -764,7 +763,6 @@ static void alx_halt(struct alx_priv *alx)
 
 	alx_netif_stop(alx);
 	hw->link_speed = SPEED_UNKNOWN;
-	hw->duplex = DUPLEX_UNKNOWN;
 
 	alx_reset_mac(hw);
 
@@ -876,18 +874,18 @@ static void __alx_stop(struct alx_priv *alx)
 	alx_free_rings(alx);
 }
 
-static const char *alx_speed_desc(struct alx_hw *hw)
+static const char *alx_speed_desc(u16 speed)
 {
-	switch (alx_speed_to_ethadv(hw->link_speed, hw->duplex)) {
-	case ADVERTISED_1000baseT_Full:
+	switch (speed) {
+	case SPEED_1000 + DUPLEX_FULL:
 		return "1 Gbps Full";
-	case ADVERTISED_100baseT_Full:
+	case SPEED_100 + DUPLEX_FULL:
 		return "100 Mbps Full";
-	case ADVERTISED_100baseT_Half:
+	case SPEED_100 + DUPLEX_HALF:
 		return "100 Mbps Half";
-	case ADVERTISED_10baseT_Full:
+	case SPEED_10 + DUPLEX_FULL:
 		return "10 Mbps Full";
-	case ADVERTISED_10baseT_Half:
+	case SPEED_10 + DUPLEX_HALF:
 		return "10 Mbps Half";
 	default:
 		return "Unknown speed";
@@ -898,8 +896,7 @@ static void alx_check_link(struct alx_priv *alx)
 {
 	struct alx_hw *hw = &alx->hw;
 	unsigned long flags;
-	int old_speed;
-	u8 old_duplex;
+	int speed, old_speed;
 	int err;
 
 	/* clear PHY internal interrupt status, otherwise the main
@@ -907,9 +904,7 @@ static void alx_check_link(struct alx_priv *alx)
 	 */
 	alx_clear_phy_intr(hw);
 
-	old_speed = hw->link_speed;
-	old_duplex = hw->duplex;
-	err = alx_read_phy_link(hw);
+	err = alx_get_phy_link(hw, &speed);
 	if (err < 0)
 		goto reset;
 
@@ -918,12 +913,15 @@ static void alx_check_link(struct alx_priv *alx)
 	alx_write_mem32(hw, ALX_IMR, alx->int_mask);
 	spin_unlock_irqrestore(&alx->irq_lock, flags);
 
-	if (old_speed == hw->link_speed)
-		return;
+	old_speed = hw->link_speed;
 
-	if (hw->link_speed != SPEED_UNKNOWN) {
+	if (old_speed == speed)
+		return;
+	hw->link_speed = speed;
+
+	if (speed != SPEED_UNKNOWN) {
 		netif_info(alx, link, alx->dev,
-			   "NIC Up: %s\n", alx_speed_desc(hw));
+			   "NIC Up: %s\n", alx_speed_desc(speed));
 		alx_post_phy_link(hw);
 		alx_enable_aspm(hw, true, true);
 		alx_start_mac(hw);
@@ -972,7 +970,6 @@ static int __alx_shutdown(struct pci_dev *pdev, bool *wol_en)
 	struct net_device *netdev = alx->dev;
 	struct alx_hw *hw = &alx->hw;
 	int err, speed;
-	u8 duplex;
 
 	netif_device_detach(netdev);
 
@@ -985,13 +982,13 @@ static int __alx_shutdown(struct pci_dev *pdev, bool *wol_en)
 		return err;
 #endif
 
-	err = alx_select_powersaving_speed(hw, &speed, &duplex);
+	err = alx_select_powersaving_speed(hw, &speed);
 	if (err)
 		return err;
 	err = alx_clear_phy_intr(hw);
 	if (err)
 		return err;
-	err = alx_pre_suspend(hw, speed, duplex);
+	err = alx_pre_suspend(hw, speed);
 	if (err)
 		return err;
 	err = alx_config_wol(hw);

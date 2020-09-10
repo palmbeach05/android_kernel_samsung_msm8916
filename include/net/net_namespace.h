@@ -121,7 +121,6 @@ struct net {
 #endif
 	struct sock		*diag_nlsk;
 	atomic_t		rt_genid;
-	atomic_t		fnhe_genid;
 };
 
 #include <linux/seq_file_net.h>
@@ -334,16 +333,6 @@ static inline int rt_genid(struct net *net)
 static inline void rt_genid_bump(struct net *net)
 {
 	atomic_inc(&net->rt_genid);
-}
-
-static inline int fnhe_genid(struct net *net)
-{
-	return atomic_read(&net->fnhe_genid);
-}
-
-static inline void fnhe_genid_bump(struct net *net)
-{
-	atomic_inc(&net->fnhe_genid);
 }
 
 #endif /* __NET_NET_NAMESPACE_H */

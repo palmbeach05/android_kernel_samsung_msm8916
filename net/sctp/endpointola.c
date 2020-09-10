@@ -193,10 +193,9 @@ struct sctp_endpoint *sctp_endpoint_new(struct sock *sk, gfp_t gfp)
 	struct sctp_endpoint *ep;
 
 	/* Build a local endpoint. */
-	ep = kzalloc(sizeof(*ep), gfp);
+	ep = t_new(struct sctp_endpoint, gfp);
 	if (!ep)
 		goto fail;
-
 	if (!sctp_endpoint_init(ep, sk, gfp))
 		goto fail_init;
 
@@ -248,9 +247,10 @@ void sctp_endpoint_free(struct sctp_endpoint *ep)
 /* Final destructor for endpoint.  */
 static void sctp_endpoint_destroy(struct sctp_endpoint *ep)
 {
-	struct sock *sk;
-
 	SCTP_ASSERT(ep->base.dead, "Endpoint is not dead", return);
+
+	/* Free up the HMAC transform. */
+	crypto_free_hash(sctp_sk(ep->base.sk)->hmac);
 
 	/* Free the digest buffer */
 	kfree(ep->digest);
@@ -271,15 +271,13 @@ static void sctp_endpoint_destroy(struct sctp_endpoint *ep)
 
 	memset(ep->secret_key, 0, sizeof(ep->secret_key));
 
-	/* Give up our hold on the sock. */
-	sk = ep->base.sk;
-	if (sk != NULL) {
-		/* Remove and free the port */
-		if (sctp_sk(sk)->bind_hash)
-			sctp_put_port(sk);
+	/* Remove and free the port */
+	if (sctp_sk(ep->base.sk)->bind_hash)
+		sctp_put_port(ep->base.sk);
 
-		sock_put(sk);
-	}
+	/* Give up our hold on the sock. */
+	if (ep->base.sk)
+		sock_put(ep->base.sk);
 
 	kfree(ep);
 	SCTP_DBG_OBJCNT_DEC(ep);
